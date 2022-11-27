@@ -1,2 +1,5 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using System.CommandLine;
+
+var rootCommand = new RootCommand("Advent of Code in C#");
+
+return await rootCommand.InvokeAsync(args);
