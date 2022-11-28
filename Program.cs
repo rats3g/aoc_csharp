@@ -115,6 +115,7 @@ rootCommand.SetHandler(async (year, day, session) =>
     var problemDirectoryInfo = CreateFolderStructure(year, day);
 
     CreateSolutionClass(problemDirectoryInfo, year, day);
+    CreateTestClass(problemDirectoryInfo, year, day);
 
     handler.CookieContainer.Add(new Uri("https://adventofcode.com/"), new Cookie("session", session));
 
@@ -139,9 +140,35 @@ void CreateSolutionClass(DirectoryInfo directoryInfo, int year, int day)
         
         internal class Day{day}_{year} : ISolution
         {lCurly}
-            public string Solve(string inputFile)
+            public Task<string> Solve(string inputFile)
             {lCurly}
                 throw new NotImplementedException("No solution provided");
+            {rCurly}
+        {rCurly}
+        """);
+}
+
+void CreateTestClass(DirectoryInfo directoryInfo, int year, int day)
+{
+    var testFile = Path.Combine(directoryInfo.FullName, $"Day{day}_{year}Should.cs");
+    if (File.Exists(testFile)) return;
+
+    var lCurly = "{";
+    var rCurly = "}";
+    File.WriteAllText(testFile,
+        $"""
+        using Xunit;
+
+        namespace AdventOfCode;
+        
+        [Trait("Year", "{year}")]
+        [Trait("Day", "{day}")]
+        public class Day{day}_{year}Should
+        {lCurly}
+            [Fact]            
+            public void HaveATest()
+            {lCurly}
+                
             {rCurly}
         {rCurly}
         """);

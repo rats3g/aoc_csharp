@@ -2,5 +2,5 @@
 
 internal interface ISolution
 {
-    string Solve(string inputFile);
+    Task<string> Solve(string inputFile);
 }
