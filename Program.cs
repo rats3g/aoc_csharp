@@ -114,6 +114,8 @@ rootCommand.SetHandler(async (year, day, session) =>
 
     var problemDirectoryInfo = CreateFolderStructure(year, day);
 
+    CreateSolutionClass(problemDirectoryInfo, year, day);
+
     handler.CookieContainer.Add(new Uri("https://adventofcode.com/"), new Cookie("session", session));
 
     await DownloadInputFile(problemDirectoryInfo, year, day);
@@ -123,6 +125,27 @@ yearOption, dayOption, sessionOption);
 return await rootCommand.InvokeAsync(args);
 
 DirectoryInfo CreateFolderStructure(int year, int day) => Directory.CreateDirectory(Path.Combine(rootDirectory, year.ToString(), day.ToString()));
+
+void CreateSolutionClass(DirectoryInfo directoryInfo, int year, int day)
+{
+    var solutionFile = Path.Combine(directoryInfo.FullName, $"Day{day}_{year}.cs");
+    if (File.Exists(solutionFile)) return;    
+
+    var lCurly = "{";
+    var rCurly = "}";
+    File.WriteAllText(solutionFile,
+        $"""
+        namespace AdventOfCode;
+        
+        internal class Day{day}_{year} : ISolution
+        {lCurly}
+            public string Solve(string inputFile)
+            {lCurly}
+                throw new NotImplementedException("No solution provided");
+            {rCurly}
+        {rCurly}
+        """);
+}
 
 async Task DownloadInputFile(DirectoryInfo directoryInfo, int year, int day)
 {
