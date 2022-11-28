@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using AdventOfCode;
+using Microsoft.Extensions.Logging;
 using System.CommandLine;
 using System.Net;
 using System.Reflection;
@@ -120,6 +121,12 @@ rootCommand.SetHandler(async (year, day, session) =>
     handler.CookieContainer.Add(new Uri("https://adventofcode.com/"), new Cookie("session", session));
 
     await DownloadInputFile(problemDirectoryInfo, year, day);
+
+    var solution = await ExecuteSolution(problemDirectoryInfo, year, day);
+    if (string.IsNullOrEmpty(solution))
+    {
+        logger.LogInformation("Solution is {solution}", solution);
+    }
 },
 yearOption, dayOption, sessionOption);
 
@@ -140,7 +147,7 @@ void CreateSolutionClass(DirectoryInfo directoryInfo, int year, int day)
         
         internal class Day{day}_{year} : ISolution
         {lCurly}
-            public Task<string> Solve(string inputFile)
+            public async Task<string> Solve(string inputFile)
             {lCurly}
                 throw new NotImplementedException("No solution provided");
             {rCurly}
@@ -190,4 +197,24 @@ async Task DownloadInputFile(DirectoryInfo directoryInfo, int year, int day)
     {
         logger.LogError(exception, "Unable to download input file from {url}", url);
     }        
+}
+
+Task<string> ExecuteSolution(DirectoryInfo directoryInfo, int year, int day)
+{
+    var solutionClass = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.Name == $"Day{day}_{year}").SingleOrDefault();
+    if (solutionClass == null)
+    {
+        logger.LogWarning("No solution class found - file generation only");
+        return Task.FromResult(string.Empty);
+    }
+
+    if (Activator.CreateInstance(solutionClass) is not ISolution solution)
+    {
+        logger.LogError("Solution class does not implement ISolution");
+        return Task.FromResult(string.Empty);
+    }
+
+    var inputFile = Path.Combine(directoryInfo.FullName, "input.txt");
+
+    return solution.Solve(inputFile);
 }
