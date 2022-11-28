@@ -1,4 +1,10 @@
 .vs
 
+Properties
+
 /bin
 /obj
+
+session.txt
+
+/[0-9]*
