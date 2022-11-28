@@ -123,9 +123,10 @@ rootCommand.SetHandler(async (year, day, session) =>
     await DownloadInputFile(problemDirectoryInfo, year, day);
 
     var solution = await ExecuteSolution(problemDirectoryInfo, year, day);
-    if (string.IsNullOrEmpty(solution))
+    if (solution != null)
     {
-        logger.LogInformation("Solution is {solution}", solution);
+        logger.LogInformation("Solution to part one is {solution1}", solution.Value.solution1);
+        logger.LogInformation("Solution to part two is {solution2}", solution.Value.solution2);
     }
 },
 yearOption, dayOption, sessionOption);
@@ -147,9 +148,14 @@ void CreateSolutionClass(DirectoryInfo directoryInfo, int year, int day)
         
         internal class Day{day}_{year} : ISolution
         {lCurly}
-            public async Task<string> Solve(string inputFile)
+            public async Task<string> SolvePartOne(string inputFile)
             {lCurly}
-                throw new NotImplementedException("No solution provided");
+                return "unsolved";
+            {rCurly}
+
+        public async Task<string> SolvePartTwo(string inputFile)
+            {lCurly}
+                return "unsolved";
             {rCurly}
         {rCurly}
         """);
@@ -199,22 +205,25 @@ async Task DownloadInputFile(DirectoryInfo directoryInfo, int year, int day)
     }        
 }
 
-Task<string> ExecuteSolution(DirectoryInfo directoryInfo, int year, int day)
+async Task<(string solution1, string solution2)?> ExecuteSolution(DirectoryInfo directoryInfo, int year, int day)
 {
     var solutionClass = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.Name == $"Day{day}_{year}").SingleOrDefault();
     if (solutionClass == null)
     {
         logger.LogWarning("No solution class found - file generation only");
-        return Task.FromResult(string.Empty);
+        return null;
     }
 
     if (Activator.CreateInstance(solutionClass) is not ISolution solution)
     {
         logger.LogError("Solution class does not implement ISolution");
-        return Task.FromResult(string.Empty);
+        return null;
     }
 
     var inputFile = Path.Combine(directoryInfo.FullName, "input.txt");
 
-    return solution.Solve(inputFile);
+    var solution1 = await solution.SolvePartOne(inputFile);
+    var solution2 = await solution.SolvePartTwo(inputFile);
+
+    return (solution1, solution2);
 }
